@@ -1,8 +1,8 @@
 """
-Perform in-depth hyperparameter search.
-
+Perform in-depth hyperparameter search in scikit-learn with pipelines.
 """
 
+from   pathlib import Path
 import pickle
 
 import numpy as np
@@ -34,7 +34,7 @@ search_space = [
                  'clf__criterion': ['gini', 'entropy'],
                  'clf__n_estimators': [50, 100, 150, 200, 250, 300],
                  'clf__max_depth': [2, 3, 4, 5, 6, 7, 8, 9, 10],
-                 'clf__max_features': ['auto', 'sqrt', 'log2'],
+                 'clf__max_features': ['sqrt', 'log2'],
                  'clf__class_weight': [None, 'balanced'],
                  'clf__criterion': ['gini', 'entropy']}
                ]
@@ -42,17 +42,20 @@ search_space = [
 clf_algos_rand = RandomizedSearchCV(estimator=pipe, 
                                     param_distributions=search_space, 
                                     scoring='f1_weighted',
-                                    n_iter=150,
+                                    n_iter=1, # 150 is useful choice
                                     cv=5, 
                                     n_jobs=-1,
                                     verbose=1)
 
  # Load data
-path = "./data/"
-X = pd.read_csv(path+"x_train.csv", header=0) # All numeric
-y = pd.read_csv(path+"y_train.csv", header=0) # Multi-classification
+p = Path.cwd() 
+X = pd.read_csv(p / "data" / "x_train.csv", header=0) # All numeric
+y = pd.read_csv(p / "data" / "y_train.csv", header=0) # Multi-classification
 y = y.values.ravel()
 
-# Search and save
+# Search 
 best_model = clf_algos_rand.fit(X, y);
-s = pickle.dumps(best_model)
+
+# Save best model
+with open(p / 'models' / 'best_model', 'wb') as f:
+    s = pickle.dumps(best_model)
